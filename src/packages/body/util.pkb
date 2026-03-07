@@ -10,7 +10,7 @@ create or replace package body util is
          if v_day in (6,7) then
            return false;
          end if;
-       return (p_date >= v_start_date and p_date < v_end_date);
+       return (p_date >= v_start_date and p_date <= v_end_date);
        end is_check_time;
 
 
@@ -37,7 +37,7 @@ create or replace package body util is
         is
          v_employee_id employees.employee_id%type;
         begin
-          Select max(e.employee_id)
+          Select nvl(max(e.employee_id), 0)
           into v_employee_id
           from employees e;
           return v_employee_id + 1;
@@ -58,6 +58,8 @@ create or replace package body util is
          exception 
            when no_data_found then 
              raise_application_error(-20001, 'A non-existent job_id was entered.');
+           when too_many_rows then 
+             raise_application_error(-20005, 'More then one line found.');
          end;
          
          begin
@@ -68,6 +70,8 @@ create or replace package body util is
          exception
            when no_data_found then
              raise_application_error(-20002, 'A non-existent department_id was entered.');
+           when too_many_rows then 
+             raise_application_error(-20005, 'More then one line found.');
          end;
 
          select j.min_salary, j.max_salary
@@ -112,11 +116,6 @@ create or replace package body util is
                    p_department_id);
 
          dbms_output.put_line(v_message);
-         exception
-           when others then
-             log_utils.log_error(p_proc_name => 'proc: util.add_employee',
-                                 p_sqlerrm => sqlerrm);
-              raise;
          end;
 
          log_utils.log_finish(p_proc_name => 'proc: util.add_employee');
