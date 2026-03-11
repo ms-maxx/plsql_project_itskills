@@ -12,6 +12,44 @@ create or replace package body util is
          end if;
        return (p_date >= v_start_date and p_date <= v_end_date);
        end is_check_time;
+       
+       procedure add_employee_history (p_employee_id in number,
+                                       p_first_name in varchar2,
+                                       p_last_name in varchar2,
+                                       p_job_id in varchar2,
+                                       p_department_id in number,
+                                       p_salary in number,
+                                       p_hire_date in date,
+                                       p_fire_reason in varchar2 default null)
+       is
+       v_fire_reason employees_history.fire_reason%type;
+       begin
+         if p_fire_reason is null then 
+           v_fire_reason := 'some reason';
+       else 
+           v_fire_reason := p_fire_reason; 
+       end if;
+    
+       insert into
+       employees_history (employee_id,
+                          first_name,
+                          last_name,
+                          job_id,
+                          department_id,
+                          salary,
+                          hire_date,
+                          fire_reason)
+       values 
+          (p_employee_id,
+           p_first_name,
+           p_last_name,
+           p_job_id,
+           p_department_id,
+           p_salary,
+           p_hire_date,
+           v_fire_reason
+           );
+       end add_employee_history;
 
 
        procedure add_employee(p_first_name in varchar2,
@@ -88,8 +126,8 @@ create or replace package body util is
          declare
            v_message varchar2(300 char);
          begin
-           v_message := 'Employee: ' || p_first_name ||' '||p_last_name||' Job_id: '||p_job_id
-                        ||'. Department id: '||p_department_id||' successfully added to the system.' ;
+           v_message := 'Employee: ' || p_first_name ||' '||p_last_name||'. Job_id: '||p_job_id
+                        ||'. Department id: '||p_department_id||'. successfully added to the system.' ;
 
            insert into
            employees (employee_id,
@@ -125,7 +163,85 @@ create or replace package body util is
                                  p_sqlerrm => sqlerrm);
               raise;
        end add_employee;
+       
+       
+       procedure fire_an_employee(p_employee_id in number,
+                                  p_fire_reason in varchar2 default null)
+       is
+       type t_emp_info is record (
+          employee_id employees.employee_id%type,
+          first_name employees.first_name%type,
+          last_name employees.last_name%type,
+          job_id employees.job_id%type,
+          department_id employees.department_id%type,
+          salary employees.salary%type,
+         
+       hire_date employees.hire_date%type);
+                             
+       v_info_employee t_emp_info;
+       begin
+       log_utils.log_start(p_proc_name => 'proc: util.fire_an_employee');
+    
+       if not is_check_time() then 
+          raise_application_error(-20004, 'You may only make changes during normal office hours');
+       end if;
+    
+       begin
+         
+       select e.employee_id, 
+              e.first_name,
+              e.last_name,
+              e.job_id,
+              e.department_id, 
+              e.salary,
+              e.hire_date
+       into v_info_employee.employee_id,
+            v_info_employee.first_name,
+            v_info_employee.last_name,
+            v_info_employee.job_id,
+            v_info_employee.department_id,
+            v_info_employee.salary,
+            v_info_employee.hire_date
+       from employees e
+       where e.employee_id = p_employee_id;
+       
+       exception 
+       when no_data_found then 
+         raise_application_error(-20001, 'A non-existent employee_id was entered.');
+       when too_many_rows then
+         raise_application_error(-20005, 'More then one line found.');
+       end;
+    
+       add_employee_history(p_employee_id => v_info_employee.employee_id,
+                           p_first_name  => v_info_employee.first_name,
+                           p_last_name   => v_info_employee.last_name,
+                           p_job_id      => v_info_employee.job_id,
+                           p_department_id => v_info_employee.department_id,
+                           p_salary      => v_info_employee.salary,
+                           p_hire_date   => v_info_employee.hire_date,
+                           p_fire_reason => p_fire_reason);
+    
+       declare 
+        v_message varchar2(300 char);
+       begin 
 
+       delete from employees e
+       where e.employee_id = p_employee_id;
+      
+       v_message := 'Employee: ' || v_info_employee.first_name||' '||v_info_employee.last_name||
+                    '. Job_id: '||v_info_employee.job_id||'. Department id: '
+                    ||v_info_employee.department_id||'. successfully removed from the system.' ;
+      
+         dbms_output.put_line(v_message);
+       end;
+    
+       log_utils.log_finish(p_proc_name => 'proc: util.fire_an_employee');
+       exception 
+         when others then 
+           log_utils.log_error(p_proc_name => 'proc: util.fire_an_employee',
+                                 p_sqlerrm => sqlerrm);
+           raise; 
+       end fire_an_employee;
 
 
 end util;

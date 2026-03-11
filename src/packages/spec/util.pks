@@ -11,6 +11,9 @@ create or replace package util is
                               p_manager_id in number default 100,
                               p_department_id in number
                               );
+                              
+       procedure fire_an_employee(p_employee_id in number,
+                                  p_fire_reason in varchar2 default null);
 
 end util;
 /
