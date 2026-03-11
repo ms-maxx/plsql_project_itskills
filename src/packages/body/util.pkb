@@ -13,6 +13,7 @@ create or replace package body util is
        return (p_date >= v_start_date and p_date <= v_end_date);
        end is_check_time;
        
+	   
        procedure add_employee_history (p_employee_id in number,
                                        p_first_name in varchar2,
                                        p_last_name in varchar2,
@@ -242,7 +243,66 @@ create or replace package body util is
                                  p_sqlerrm => sqlerrm);
            raise; 
        end fire_an_employee;
-
+       
+       
+       procedure change_attribute_employee(p_employee_id in number,
+                                      p_first_name in varchar2 default null,
+                                      p_last_name in varchar2 default null,
+                                      p_email in varchar2 default null,
+                                      p_phone_number in varchar2 default null,
+                                      p_job_id in varchar2 default null,
+                                      p_salary in number default null,
+                                      p_commission_pct in number default null,
+                                      p_manager_id in number default null,
+                                      p_department_id in number default null) is
+       begin
+    
+        log_utils.log_start(p_proc_name => 'proc: util.change_attribute_employee');
+    
+        if not is_check_time() then
+            raise_application_error(-20004, 'You may only make changes during normal office hours');
+        end if;
+    
+        if p_first_name is null 
+          and p_last_name is null
+          and p_email is null
+          and p_phone_number is null
+          and p_job_id is null
+          and p_salary is null 
+          and p_commission_pct is null
+          and p_manager_id is null
+          and p_department_id is null
+        then 
+          log_utils.log_finish(p_proc_name => 'proc: util.change_attribute_employee');
+          raise_application_error(-20001, 'No attributes were passed for update');
+        end if;
+    
+        update employees e
+           set e.first_name = nvl(p_first_name, e.first_name),
+               e.last_name = nvl(p_last_name, e.last_name),
+               e.email = nvl(p_email, e.email),
+               e.phone_number = nvl(p_phone_number, e.phone_number),
+               e.job_id = nvl(p_job_id, e.job_id),
+               e.salary = nvl(p_salary, e.salary),
+               e.commission_pct = nvl(p_commission_pct, e.commission_pct),
+               e.manager_id = nvl(p_manager_id, e.manager_id),
+               e.department_id = nvl(p_department_id, e.department_id)
+           where e.employee_id = p_employee_id; 
+         
+        if sql%rowcount = 0 then 
+          raise_application_error(-20002, 'Employee does not exists');
+        end if;
+      
+        dbms_output.put_line('The employees: '||p_employee_id||' attributes heve been successfully updated');
+          
+        log_utils.log_finish(p_proc_name => 'proc: util.change_attribute_employee');
+       exception 
+         when others then 
+           log_utils.log_error(p_proc_name => 'proc: util.change_attribute_employee',
+                                 p_sqlerrm => sqlerrm);
+         raise;  
+       end change_attribute_employee;
+       
 
 end util;
 /
