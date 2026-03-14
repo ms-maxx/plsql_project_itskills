@@ -22,3 +22,20 @@ begin
 end;
 /
 
+
+--test procedure util.change_attribute_employee
+
+begin 
+     util.change_attribute_employee(p_employee_id => 207,
+                                    p_first_name => 'Maxim',
+                                    p_last_name => 'SecondName',
+                                    p_email => 'smirnov@gemail',
+                                    p_phone_number => '242526',
+                                    p_job_id => 'Java_dev',
+                                    p_salary => 60500,
+                                    p_commission_pct => 0.8,
+                                    p_manager_id => 500,
+                                    p_department_id => 60);
+end;
+/
+
