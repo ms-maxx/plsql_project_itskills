@@ -39,3 +39,28 @@ begin
 end;
 /
 
+
+--test procedure util.copy_table
+
+declare 
+  v_result varchar2(1000 char);
+begin 
+  util_ddl.copy_table(
+       p_source_scheme => 'HR',
+       p_target_scheme => user,
+       p_list_table    => 'EMPLOYEES,DEPARTMENTS',
+       p_copy_data     => true,
+       po_result       => v_result
+   );
+end;
+/
+
+
+
+
+
+
+
+
+
+
