@@ -1,9 +1,6 @@
 create or replace package util_ddl is
 
-  type rec_value_list is record(
-    value_list varchar2(100));
-
-  type tab_value_list is table of rec_value_list;
+  type tab_value_list is table of varchar2(100 char);
   v_tab_array tab_value_list;
 
   function table_from_list(p_list_val  in varchar2,

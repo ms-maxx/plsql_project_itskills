@@ -14,7 +14,7 @@ create or replace package body util_ddl is
                 CONNECT BY LEVEL <=
                            REGEXP_COUNT(p_list_val, p_separator) + 1) loop
     
-      PIPE ROW(rec);
+      PIPE ROW(rec.cur_value);
     
     end loop;
   
@@ -54,7 +54,7 @@ create or replace package body util_ddl is
     if p_list_table is null then
       raise_application_error(-20002, 'Table list is required.');
     end if;
-    
+  
     for rec in (select table_name,
                        'create table ' || v_target_scheme || '.' ||
                        table_name || ' (' ||
@@ -67,22 +67,13 @@ create or replace package body util_ddl is
                                           null)
                                  when data_type = 'DATE' then
                                   null
-                                 else
-                                  case
-                                    when data_length is not null and
-                                         data_type not in
-                                         ('CLOB', 'BLOB', 'LONG', 'LONG RAW') then
-                                     null
-                                    else
-                                     null
-                                  end
                                end,
                                ', ') within group(order by column_id) || ')' as ddl_code
                   from all_tab_columns
                  where owner = v_source_scheme
                    and table_name in
-                       (select value_list
-                          from table(table_from_list(upper(p_list_table))))
+                       (select value(t)
+                          from table(table_from_list(upper(p_list_table)))t )
                  group by table_name
                  order by table_name) loop
       begin
