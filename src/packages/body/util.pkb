@@ -308,10 +308,10 @@ create or replace package body util is
       raise;
   end change_attribute_employee;
   
-  procedure àði_nbu_sync is
+  procedure api_nbu_sync is
     v_list_currencies sys_params.value_text%type;
     
-    c_proc_name constant varchar2(100 char) := 'proc: util.àði_nbu_sync';
+    c_proc_name constant varchar2(100 char) := 'proc: util.api_nbu_sync';
     c_param_name constant varchar2(100 char) := lower('LIST_CURRENCIES');
     
     c_err_param_not_found constant pls_integer := -20100;
@@ -403,7 +403,7 @@ create or replace package body util is
         p_text      => 'Fatal error in api_nbu_sync'
       );
       raise; 
-  end àði_nbu_sync;
+  end api_nbu_sync;
 
 end util;
 /

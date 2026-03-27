@@ -26,7 +26,7 @@ create or replace package util is
                                       p_manager_id     in number default null,
                                       p_department_id  in number default null);
 
-  procedure àği_nbu_sync;
+  procedure api_nbu_sync;
 
   function get_needed_curr(p_valcode in varchar2 default 'USD',
                            p_date    in date default sysdate) return varchar2;
